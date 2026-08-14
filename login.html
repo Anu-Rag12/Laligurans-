@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Login | LGBS</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+</head>
+<body class="login-page">
+<div class="login-shell">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <a href="index.html" class="login-brand">
+      <img src="images/logo.jpg" alt="LGBS" class="login-logo">
+      <div>
+        <span class="login-tag">Student Portal</span>
+        <strong>Laligurans Batika</strong>
+        <span class="login-sub">Secondary School</span>
+      </div>
+    </a>
+    <h1>Student sign in</h1>
+    <p class="login-lead">Enter your <strong>username</strong> and password. You stay signed in on this device.</p>
+
+    <!-- Normal login -->
+    <form id="login-form" class="login-form">
+      <label>Username
+        <input type="text" id="username" required placeholder="e.g. ram.thapa or LGBS2083-042" autocomplete="username" autocapitalize="none">
+      </label>
+      <label>Password
+        <div class="pass-wrap">
+          <input type="password" id="password" required placeholder="Password" autocomplete="current-password">
+          <button type="button" class="pass-toggle" id="toggle">Show</button>
+        </div>
+      </label>
+      <button type="submit" class="btn btn-red btn-shine login-btn" id="btn">Sign in →</button>
+      <p id="msg" class="login-msg" role="status"></p>
+    </form>
+
+    <!-- Choose username (after Google, first time) -->
+    <form id="username-form" class="login-form" hidden>
+      <p class="login-lead" style="margin-bottom:14px">Choose a <strong>username</strong> for your account (letters, numbers, dot or underscore).</p>
+      <label>Username
+        <input type="text" id="new-username" required placeholder="e.g. sita.sharma" autocomplete="username" autocapitalize="none">
+      </label>
+      <button type="submit" class="btn btn-red btn-shine login-btn" id="save-user-btn">Save &amp; continue →</button>
+      <p id="msg2" class="login-msg" role="status"></p>
+    </form>
+
+    <div class="auth-divider" id="or-div"><span>or</span></div>
+    <button type="button" class="btn-google" id="google">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.8 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4 5.6l.1.1 6.3 5.3C39.1 37.1 44 32 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+
+    <p class="login-foot"><a href="index.html">← Back to website</a> · <a href="contact.html">Help</a></p>
+  </div>
+</div>
+<script>
+(function () {
+  // Username login uses: username → email = username@lgbs.student
+  // Office creates users in Supabase with that email format.
+  var DOMAIN = "@lgbs.student";
+
+  function toEmail(username) {
+    var u = (username || "").trim().toLowerCase().replace(/\s+/g, "");
+    if (!u) return "";
+    if (u.indexOf("@") !== -1) return u; // allow full email if someone types it
+    return u + DOMAIN;
+  }
+
+  function cleanUsername(u) {
+    return (u || "").trim().toLowerCase().replace(/\s+/g, "");
+  }
+
+  function validUsername(u) {
+    return /^[a-z0-9._-]{3,32}$/.test(u);
+  }
+
+  var msg = document.getElementById("msg");
+  var msg2 = document.getElementById("msg2");
+  function show(el, t, ok) {
+    el.textContent = t || "";
+    el.className = "login-msg" + (t ? (ok ? " success" : " error") : "");
+  }
+
+  var sb = window.lgbsCreateClient();
+  if (!sb) {
+    show(msg, "Could not load login system. Check internet and refresh.");
+    return;
+  }
+
+  async function goAfterLogin(user) {
+    var meta = (user && user.user_metadata) || {};
+    var uname = meta.username || meta.preferred_username || "";
+    // Google users without username → ask once
+    if (!uname) {
+      document.getElementById("login-form").hidden = true;
+      document.getElementById("or-div").hidden = true;
+      document.getElementById("google").hidden = true;
+      document.getElementById("username-form").hidden = false;
+      return;
+    }
+    location.href = "results.html";
+  }
+
+  sb.auth.getSession().then(function (r) {
+    if (r.data && r.data.session) goAfterLogin(r.data.session.user);
+  });
+
+  document.getElementById("toggle").onclick = function () {
+    var p = document.getElementById("password");
+    var on = p.type === "password";
+    p.type = on ? "text" : "password";
+    this.textContent = on ? "Hide" : "Show";
+  };
+
+  // Username + password
+  document.getElementById("login-form").onsubmit = async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("btn");
+    var username = cleanUsername(document.getElementById("username").value);
+    var password = document.getElementById("password").value;
+    if (!username) { show(msg, "Enter your username."); return; }
+    btn.disabled = true;
+    btn.textContent = "Signing in…";
+    show(msg, "");
+    try {
+      var email = toEmail(username);
+      var { data, error } = await sb.auth.signInWithPassword({ email: email, password: password });
+      if (error) throw error;
+      // Ensure username saved in metadata
+      try {
+        await sb.auth.updateUser({ data: { username: username } });
+      } catch (e) {}
+      show(msg, "Success! Opening results…", true);
+      location.href = "results.html";
+    } catch (err) {
+      var m = err.message || "Login failed";
+      if (/Invalid login/i.test(m)) {
+        m = "Wrong username or password. Username is what the school gave you (not your Gmail).";
+      }
+      if (/Email not confirmed/i.test(m)) {
+        m = "Account not confirmed. Ask the office to enable Auto Confirm for your user.";
+      }
+      show(msg, m);
+      btn.disabled = false;
+      btn.textContent = "Sign in →";
+    }
+  };
+
+  // Save username after Google
+  document.getElementById("username-form").onsubmit = async function (e) {
+    e.preventDefault();
+    var u = cleanUsername(document.getElementById("new-username").value);
+    if (!validUsername(u)) {
+      show(msg2, "Use 3–32 characters: letters, numbers, dot, _ or - only.");
+      return;
+    }
+    var btn = document.getElementById("save-user-btn");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    try {
+      var { error } = await sb.auth.updateUser({ data: { username: u } });
+      if (error) throw error;
+      show(msg2, "Saved. Opening results…", true);
+      location.href = "results.html";
+    } catch (err) {
+      show(msg2, err.message || "Could not save username");
+      btn.disabled = false;
+      btn.textContent = "Save & continue →";
+    }
+  };
+
+  // Google
+  document.getElementById("google").onclick = async function () {
+    show(msg, "");
+    try {
+      var { error } = await sb.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: location.origin + "/login.html" }
+      });
+      if (error) throw error;
+    } catch (err) {
+      show(msg, (err.message || "Google failed") + " — Enable Google in Supabase Auth providers first.");
+    }
+  };
+})();
+</script>
+</body>
+</html>

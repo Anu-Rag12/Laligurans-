@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Student exam results — Laligurans Batika Secondary School">
+  <title>Results | Laligurans Batika Secondary School</title>
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+</head>
+<body>
+<div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+<div class="motion-bg" aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+</div>
+
+<div class="top-bar">
+  <div class="container top-bar-inner">
+    <a href="index.html" class="top-brand" title="Go to Home">
+      <img src="images/logo.jpg" alt="Laligurans Batika Secondary School" class="logo-img">
+      <div class="brand-text">
+        <span class="tagline">In Pursuit of Excellence</span>
+        <h1 class="school-name">LALIGURANS<br><span>BATIKA SECONDARY SCHOOL</span></h1>
+      </div>
+    </a>
+    <div class="top-contact">
+      <a href="tel:015149347"><span>📞</span> 01-5149347</a>
+      <a href="mailto:info@lbbss.edu.np"><span>✉️</span> info@lbbss.edu.np</a>
+      <span><span>📍</span> Narephant, Kathmandu</span>
+    </div>
+  </div>
+</div>
+
+<header class="header" id="header">
+  <nav class="nav container">
+    <button class="menu-toggle" aria-label="Open menu">☰</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="academics.html">Academics</a>
+      <a href="admissions.html">Admissions</a>
+      <a href="results.html" class="active student-only" style="display:none">Results</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="news.html">News & Events</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact Us</a>
+    </div>
+    <a class="btn-portal" href="login.html">Student Portal</a>
+  </nav>
+</header>
+
+<main>
+<section class="page-banner">
+  <div class="container">
+    <span class="section-label">— Students</span>
+    <h1>Exam results</h1>
+    <p id="results-sub">Sign in to view your marks</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div id="need-login" class="glass-card" style="max-width:520px;margin:0 auto;padding:28px;text-align:center">
+      <h2 style="margin-top:0">Login required</h2>
+      <p style="color:var(--muted)">Only signed-in students can see personal results.</p>
+      <a class="btn btn-red btn-shine" href="login.html">Sign in →</a>
+    </div>
+
+    <div id="results-panel" hidden>
+      <div class="section-head">
+        <span class="section-label">— Your marks</span>
+        <h2 id="student-name">Results</h2>
+        <p id="student-email" style="color:var(--muted)"></p>
+      </div>
+      <div class="table-wrap">
+        <table class="portal-table">
+          <thead>
+            <tr><th>Subject</th><th>Term</th><th>Marks</th><th>Grade</th><th>Remarks</th></tr>
+          </thead>
+          <tbody id="results-body">
+            <tr><td colspan="5" class="muted">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:16px;font-size:13.5px;color:var(--muted)">
+        Marks are published by the school office. If something looks wrong, contact your class teacher.
+      </p>
+      <p style="margin-top:12px">
+        <button type="button" class="btn btn-red" id="logout-btn" style="padding:10px 18px;font-size:13px">Log out</button>
+      </p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>
+      <a href="index.html" class="footer-brand">
+        <img src="images/logo.jpg" alt="" class="logo-img">
+        <span>Laligurans Batika Secondary School</span>
+      </a>
+      <p class="footer-motto">संस्कारयुक्त शिक्षा , लालीगुराँसको सदिच्छा ।।</p>
+      <p class="footer-addr">Narephant, Koteshwor · 01-5149347</p>
+    </div>
+  </div>
+  <div class="container copyright">© Laligurans Batika Secondary School</div>
+</footer>
+
+<script src="js/script.js"></script>
+<script src="js/motion.js"></script>
+<script src="js/auth-nav.js"></script>
+<script>
+(async function () {
+  var sb = window.lgbsCreateClient && window.lgbsCreateClient();
+  var need = document.getElementById("need-login");
+  var panel = document.getElementById("results-panel");
+  if (!sb) return;
+
+  var { data } = await sb.auth.getSession();
+  if (!data.session) {
+    need.hidden = false;
+    panel.hidden = true;
+    return;
+  }
+
+  need.hidden = true;
+  panel.hidden = false;
+  var u = data.session.user;
+  var email = u.email || "";
+  var meta = u.user_metadata || {};
+  var username = meta.username || meta.preferred_username || "";
+  var name = username || meta.full_name || meta.name || (email ? email.split("@")[0] : "Student");
+  // Hide internal @lgbs.student email from display
+  var displayId = username || (email.indexOf("@lgbs.student") !== -1 ? email.split("@")[0] : email);
+  document.getElementById("student-name").textContent = name + " — Exam results";
+  document.getElementById("student-email").textContent = displayId ? ("@" + displayId.replace(/^@/, "")) : "";
+  document.getElementById("results-sub").textContent = "Signed in as " + (username || displayId);
+
+  var body = document.getElementById("results-body");
+  try {
+    var res = await sb.from("student_results").select("*").eq("user_id", u.id).order("term", { ascending: false });
+    if (res.data && res.data.length) {
+      body.innerHTML = res.data.map(function (r) {
+        return "<tr><td>" + (r.subject || "") + "</td><td>" + (r.term || "") + "</td><td>" +
+          (r.marks != null ? r.marks : "—") + "</td><td>" + (r.grade || "—") + "</td><td>" +
+          (r.remarks || "") + "</td></tr>";
+      }).join("");
+    } else {
+      body.innerHTML = "<tr><td colspan='5' class='muted'>No results published yet. The school office will add marks in Supabase.</td></tr>";
+    }
+  } catch (e) {
+    body.innerHTML = "<tr><td colspan='5' class='muted'>Results table not set up yet. Run the SQL in SCHOOL-SETUP.txt.</td></tr>";
+  }
+
+  document.getElementById("logout-btn").onclick = async function () {
+    await sb.auth.signOut();
+    location.href = "login.html";
+  };
+})();
+</script>
+</body>
+</html>
